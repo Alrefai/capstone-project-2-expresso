@@ -5,13 +5,7 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE ||
                                 './database.sqlite');
 
-employeesRouter.get('/', (req, res, next) => {
-  db.all(`SELECT * FROM Employee WHERE is_current_employee = 1`,
-    (err, rows) => {
-      err ? next(err) : res.send({ employees: rows });
-    }
-  );
-});
+const timesheetsRouter = require('./timesheets');
 
 const validateReqBody = (req, res, next) => {
   const name = req.body.employee.name,
@@ -23,6 +17,24 @@ const validateReqBody = (req, res, next) => {
     next()
   ) : res.sendStatus(400);
 };
+
+employeesRouter.param('employeeId', (req, res, next, employeeId) => {
+  db.get(`SELECT * FROM Employee WHERE id =${employeeId}`, (err, row) => {
+    err ? next(err) : row ? (
+      req.employee = row,
+      next()
+    ) : res.sendStatus(404);
+  });
+});
+
+
+employeesRouter.get('/', (req, res, next) => {
+  db.all(`SELECT * FROM Employee WHERE is_current_employee = 1`,
+    (err, rows) => {
+      err ? next(err) : res.send({ employees: rows });
+    }
+  );
+});
 
 employeesRouter.post('/', validateReqBody, (req, res, next) => {
   db.run(`INSERT INTO Employee (name, position, wage, is_current_employee)
@@ -40,15 +52,6 @@ employeesRouter.post('/', validateReqBody, (req, res, next) => {
       });
     }
   );
-});
-
-employeesRouter.param('employeeId', (req, res, next, employeeId) => {
-  db.get(`SELECT * FROM Employee WHERE id =${employeeId}`, (err, row) => {
-    err ? next(err) : row ? (
-      req.employee = row,
-      next()
-    ) : res.sendStatus(404);
-  });
 });
 
 employeesRouter.get('/:employeeId', (req, res, next) => {
@@ -87,5 +90,7 @@ employeesRouter.delete('/:employeeId', (req, res, next) => {
   );
 });
 
+
+employeesRouter.use('/:employeeId/timesheets', timesheetsRouter);
 
 module.exports = employeesRouter;
