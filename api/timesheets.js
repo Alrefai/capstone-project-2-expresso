@@ -8,27 +8,30 @@ const db = new sqlite3.Database(process.env.TEST_DATABASE ||
 timesheetsRouter.get('/', (req, res, next) => {
   db.all(`SELECT * FROM Timesheet WHERE employee_id = ${req.params.employeeId}`,
     (err, rows) => {
-      err ? next(err) : res.send({ timesheets: rows });
+      if (err) { return next(err) }
+      if (!rows) { res.sendStatus(404) }
+      res.send({ timesheets: rows })
     }
   );
 });
 
 const validateReqBody = (req, res, next) => {
-  const hours = Number(req.body.timesheet.hours),
-        rate = Number(req.body.timesheet.rate),
-        date = Number(req.body.timesheet.date),
-        employeeId = Number(req.body.timesheet.employeeId);
+  const hours = req.body.timesheet.hours,
+        rate = req.body.timesheet.rate,
+        date = req.body.timesheet.date,
+        employeeId = req.params.employeeId;
 
-  hours && rate && date && employeeId ? (
-    req.newTimesheet = [hours, rate, date, employeeId]
-  ) : res.sendStatus(400);
+  if (!hours || !rate || !date) {
+    return res.sendStatus(400);
+
+  }
+  req.newTimesheet = [hours, rate, date, employeeId];
 
   db.get(`SELECT * FROM Employee WHERE id = ${employeeId}`,
     (err, row) => {
-      err ? next(err) : row ? (
-        req.timesheet = row,
-        next()
-      ) : res.sendStatus(404);
+      if (err) { return next(err) }
+      if (!row) { return res.sendStatus(404) }
+      next();
     }
   );
 };
@@ -43,12 +46,11 @@ timesheetsRouter.post('/', validateReqBody, (req, res, next) => {
       $employeeId: req.newTimesheet[3]
     },
     function(err) {
-      if (err) {
-        return next(err);
-      }
+      if (err) { return next(err) }
       db.get(`SELECT * FROM Timesheet WHERE id = ${this.lastID}`,
         (err, row) => {
-          err ? next(err) : res.status(201).send({ timesheet: row });
+          if (err) { return next(err) }
+          res.status(201).send({ timesheet: row });
         }
       );
     }
@@ -57,16 +59,12 @@ timesheetsRouter.post('/', validateReqBody, (req, res, next) => {
 
 timesheetsRouter.param('timesheetId', (req, res, next, timesheetId) => {
   db.get(`SELECT * FROM Timesheet WHERE id =${timesheetId}`, (err, row) => {
-    err ? next(err) : row ? (
-      req.timesheet = row,
-      next()
-    ) : res.sendStatus(404);
+    if (err) { return next(err) }
+    if (!row) { return res.sendStatus(404) }
+    req.timesheet = row;
+    next();
   });
 });
-
-timesheetsRouter.get('/:timesheetId', (req, res, next) => {
-  res.send({ timesheet: req.timesheet })
-})
 
 timesheetsRouter.put('/:timesheetId', validateReqBody, (req, res, next) => {
   const timesheetId = req.params.timesheetId;
@@ -83,7 +81,8 @@ timesheetsRouter.put('/:timesheetId', validateReqBody, (req, res, next) => {
       if (err) { return next(err) }
       db.get(`SELECT * FROM Timesheet WHERE id = ${timesheetId}`,
         (err, row) => {
-          err ? next(err) : res.send({ timesheet: row });
+          if (err) { return next(err) }
+          res.send({ timesheet: row });
         }
       );
     }
@@ -94,11 +93,11 @@ timesheetsRouter.delete('/:timesheetId', (req, res, next) => {
   const timesheetId = req.params.timesheetId;
   db.run(`DELETE FROM Timesheet WHERE id = ${timesheetId}`,
     function(err) {
-      err ? next(err) : res.sendStatus(204);
+      if (err) { return next(err) }
+      res.sendStatus(204);
     }
   );
 });
 
 
 module.exports = timesheetsRouter;
-

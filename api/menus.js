@@ -5,7 +5,7 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE ||
                                 './database.sqlite');
 
-// const timesheetsRouter = require('./timesheets');
+const menuItemsRouter = require('./menuItems');
 
 const validateReqBody = (req, res, next) => {
   const title = req.body.menu.title;
@@ -81,6 +81,6 @@ menusRouter.delete('/:menuId', (req, res, next) => {
 });
 
 
-// menusRouter.use('/:menuId/timesheets', timesheetsRouter);
+menusRouter.use('/:menuId/menu-items', menuItemsRouter);
 
 module.exports = menusRouter;
