@@ -55,8 +55,8 @@
     "url": "https://github.com/sindresorhus/camelcase-keys/issues"
   },
   "dependencies": {
-    "camelcase": "^4.1.0",
-    "map-obj": "^2.0.0",
+    "camelcase": "^5.0.0",
+    "map-obj": "^3.0.0",
     "quick-lru": "^1.0.0"
   },
   "description": "Convert object keys to camelCase",
