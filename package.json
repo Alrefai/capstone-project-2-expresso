@@ -18,8 +18,8 @@
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-router-dom": "^4.2.2",
-    "sqlite3": "^3.1.9",
-    "supertest": "^3.0.0",
+    "sqlite3": "^5.0.3",
+    "supertest": "^6.2.0",
     "whatwg-fetch": "^2.0.3"
   },
   "devDependencies": {
